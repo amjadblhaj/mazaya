@@ -7,15 +7,27 @@ import { Button } from "@/components/ui/button";
 const MAX_SIZE = 2 * 1024 * 1024;
 const VALID_TYPES = ["image/png", "image/jpeg"];
 
-export function LogoUpload({ onChange }: { onChange: (file: File | null) => void }) {
-  const [preview, setPreview] = useState<string | null>(null);
+export function LogoUpload({
+  onChange,
+  name,
+  initialPreviewUrl,
+}: {
+  onChange: (file: File | null) => void;
+  /** When set, the internal file input carries this name so it's included
+   * automatically in native <form> FormData serialization (needed when the
+   * surrounding form uses `action={formAction}` rather than manually
+   * building FormData, e.g. BrandSettingsForm vs. RegisterWizard). */
+  name?: string;
+  initialPreviewUrl?: string | null;
+}) {
+  const [preview, setPreview] = useState<string | null>(initialPreviewUrl ?? null);
   const [error, setError] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   function handleFile(file: File | null) {
     setError(null);
     if (!file) {
-      setPreview(null);
+      setPreview(initialPreviewUrl ?? null);
       onChange(null);
       return;
     }
@@ -48,6 +60,7 @@ export function LogoUpload({ onChange }: { onChange: (file: File | null) => void
         </Button>
         <input
           ref={inputRef}
+          name={name}
           type="file"
           accept="image/png,image/jpeg"
           className="hidden"

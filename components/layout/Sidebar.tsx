@@ -20,7 +20,9 @@ const NAV_ITEMS = [
   { href: "/excel", label: "استيراد Excel", icon: Upload },
   { href: "/rewards", label: "المكافآت", icon: GiftIcon },
   { href: "/activity", label: "سجل النشاط", icon: Activity },
-  { href: "/settings", label: "الإعدادات", icon: Settings },
+  // General branch/staff management (/settings) isn't built yet — only
+  // /settings/brand exists so far, so the nav points straight there.
+  { href: "/settings/brand", label: "الإعدادات", icon: Settings },
 ] as const;
 
 export function Sidebar() {
