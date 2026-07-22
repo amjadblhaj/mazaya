@@ -364,6 +364,46 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
+-- Atomic point grant/adjustment (manual grant, Excel import, and future
+-- adjustment flows all go through this — mirrors redeem_reward's shape).
+-- p_points may be negative (adjustment/correction); the students.points
+-- CHECK(>= 0) constraint is the last line of defense against overdraft,
+-- but this also checks explicitly to return a clean error instead of a
+-- raw constraint-violation error to the caller.
+CREATE OR REPLACE FUNCTION grant_points(
+  p_tenant_id  UUID,
+  p_student_id INTEGER,
+  p_points     INTEGER,
+  p_action     TEXT,
+  p_type       TEXT,
+  p_granted_by TEXT,
+  p_branch_id  INTEGER DEFAULT NULL,
+  p_note       TEXT DEFAULT NULL
+) RETURNS JSONB AS $$
+DECLARE v_student students%ROWTYPE;
+BEGIN
+  IF p_points = 0 THEN
+    RETURN jsonb_build_object('success',false,'error','points_zero');
+  END IF;
+
+  SELECT * INTO v_student FROM students WHERE id = p_student_id AND tenant_id = p_tenant_id FOR UPDATE;
+  IF NOT FOUND THEN
+    RETURN jsonb_build_object('success',false,'error','student_not_found');
+  END IF;
+
+  IF v_student.points + p_points < 0 THEN
+    RETURN jsonb_build_object('success',false,'error','insufficient_points',
+      'current',v_student.points);
+  END IF;
+
+  UPDATE students SET points = points + p_points WHERE id = p_student_id AND tenant_id = p_tenant_id;
+  INSERT INTO points_log(tenant_id,student_id,points,action,type,granted_by,branch_id,note)
+    VALUES(p_tenant_id,p_student_id,p_points,p_action,p_type,p_granted_by,p_branch_id,p_note);
+
+  RETURN jsonb_build_object('success',true,'new_balance',v_student.points + p_points);
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
 -- Activate branch addon
 CREATE OR REPLACE FUNCTION activate_branch_addon(
   p_tenant_id    UUID,
@@ -441,13 +481,20 @@ CREATE POLICY "tenant_staff_notifications" ON notifications
 -- ----------------------------------------------------------------------------
 -- 16. Supabase Storage Bucket
 -- ----------------------------------------------------------------------------
-INSERT INTO storage.buckets (id, name, public) VALUES ('tenant-logos', 'tenant-logos', true);
+INSERT INTO storage.buckets (id, name, public) VALUES ('tenant-logos', 'tenant-logos', true)
+  ON CONFLICT (id) DO NOTHING;
 
+-- storage.objects is a shared table across the whole project, so these
+-- policies survive a "reset public schema" — DROP IF EXISTS first makes this
+-- section safe to re-run on its own regardless of what already exists.
+DROP POLICY IF EXISTS "logos_public_read" ON storage.objects;
 CREATE POLICY "logos_public_read" ON storage.objects
   FOR SELECT USING (bucket_id = 'tenant-logos');
 
+DROP POLICY IF EXISTS "logos_auth_upload" ON storage.objects;
 CREATE POLICY "logos_auth_upload" ON storage.objects
   FOR INSERT WITH CHECK (bucket_id = 'tenant-logos' AND auth.role() = 'authenticated');
 
+DROP POLICY IF EXISTS "logos_auth_update" ON storage.objects;
 CREATE POLICY "logos_auth_update" ON storage.objects
   FOR UPDATE USING (bucket_id = 'tenant-logos' AND auth.role() = 'authenticated');
