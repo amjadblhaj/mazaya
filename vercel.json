@@ -1,9 +1,0 @@
-{
-  "rewrites": [
-    {
-      "source": "/:path*",
-      "has": [{ "type": "host", "value": "(?<subdomain>[^.]+).mazaya.app" }],
-      "destination": "/:path*"
-    }
-  ]
-}
