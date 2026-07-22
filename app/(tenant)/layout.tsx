@@ -5,9 +5,7 @@ import { checkSubscriptionGate } from "@/lib/tenant/subscriptionStatus";
 import { getCurrentStaff } from "@/lib/auth/getStaff";
 import { createClient } from "@/lib/supabase/server";
 import { TenantProvider } from "@/context/TenantContext";
-import { Sidebar } from "@/components/layout/Sidebar";
-import { TrialBanner } from "@/components/subscription/TrialBanner";
-import { NotificationBell } from "@/components/layout/NotificationBell";
+import { TenantShell } from "@/components/layout/TenantShell";
 
 export default async function TenantLayout({ children }: { children: React.ReactNode }) {
   const tenant = await getTenantFromHeaders();
@@ -34,16 +32,7 @@ export default async function TenantLayout({ children }: { children: React.React
   return (
     <TenantProvider tenant={tenant}>
       <style dangerouslySetInnerHTML={{ __html: buildBrandThemeCSS(tenant) }} />
-      <div className="flex min-h-screen">
-        <Sidebar />
-        <div className="flex flex-1 flex-col">
-          <div className="flex items-center justify-end border-b bg-background px-4 py-2">
-            <NotificationBell notifications={notifications ?? []} />
-          </div>
-          <TrialBanner />
-          <main className="flex-1 bg-brand-surface">{children}</main>
-        </div>
-      </div>
+      <TenantShell notifications={notifications ?? []}>{children}</TenantShell>
     </TenantProvider>
   );
 }

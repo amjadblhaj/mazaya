@@ -25,12 +25,12 @@ const NAV_ITEMS = [
   { href: "/settings/brand", label: "الإعدادات", icon: Settings },
 ] as const;
 
-export function Sidebar() {
+export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
   const pathname = usePathname();
 
   return (
     <aside
-      className="flex w-64 flex-col justify-between p-4"
+      className="flex h-full w-64 flex-col justify-between overflow-y-auto p-4"
       style={{ background: "var(--brand-primary)" }}
     >
       <div>
@@ -44,6 +44,7 @@ export function Sidebar() {
               <Link
                 key={href}
                 href={href}
+                onClick={onNavigate}
                 className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors"
                 style={{
                   color: isActive ? "var(--brand-accent)" : "var(--brand-secondary)",

@@ -12,11 +12,14 @@ const NAV_ITEMS = [
   { href: "/super-admin/addons", label: "طلبات الفروع", icon: PlusSquare },
 ] as const;
 
-export function SuperAdminSidebar() {
+export function SuperAdminSidebar({ onNavigate }: { onNavigate?: () => void }) {
   const pathname = usePathname();
 
   return (
-    <aside className="flex w-64 flex-col justify-between p-4" style={{ background: "var(--brand-primary)" }}>
+    <aside
+      className="flex h-full w-64 flex-col justify-between overflow-y-auto p-4"
+      style={{ background: "var(--brand-primary)" }}
+    >
       <div>
         <div className="mb-8 px-2">
           <span className="text-xl font-black" style={{ color: "var(--brand-secondary)" }}>
@@ -30,6 +33,7 @@ export function SuperAdminSidebar() {
               <Link
                 key={href}
                 href={href}
+                onClick={onNavigate}
                 className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors"
                 style={{
                   color: isActive ? "var(--brand-accent)" : "var(--brand-secondary)",
