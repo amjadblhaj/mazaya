@@ -271,6 +271,9 @@ RETURNS JSONB AS $$
 DECLARE v_stat RECORD;
 BEGIN
   SELECT * INTO v_stat FROM tenant_stats WHERE tenant_id = p_tenant_id;
+  IF NOT FOUND THEN
+    RETURN jsonb_build_object('allowed',false,'reason','tenant_not_found');
+  END IF;
   IF v_stat.status NOT IN ('active','trial') THEN
     RETURN jsonb_build_object('allowed',false,'reason','subscription_inactive');
   END IF;
@@ -291,6 +294,9 @@ RETURNS JSONB AS $$
 DECLARE v_stat RECORD;
 BEGIN
   SELECT * INTO v_stat FROM tenant_stats WHERE tenant_id = p_tenant_id;
+  IF NOT FOUND THEN
+    RETURN jsonb_build_object('allowed',false,'reason','tenant_not_found');
+  END IF;
   IF v_stat.status NOT IN ('active','trial') THEN
     RETURN jsonb_build_object('allowed',false,'reason','subscription_inactive');
   END IF;
