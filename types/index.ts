@@ -96,6 +96,16 @@ export interface Staff {
   created_at: string;
 }
 
+export interface Notification {
+  id: number;
+  tenant_id: string;
+  type: string;
+  title: string;
+  message: string;
+  read: boolean;
+  created_at: string;
+}
+
 export interface Branch {
   id: number;
   tenant_id: string;
