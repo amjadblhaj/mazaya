@@ -250,8 +250,11 @@ SELECT
   COUNT(DISTINCT b.id)                                       AS branches_used,
   COUNT(DISTINCT s.id) FILTER (WHERE s.active = true)       AS students_count,
   COALESCE(SUM(ao.branches) FILTER (WHERE ao.status = 'active'), 0) AS addon_branches,
-  t.max_branches + COALESCE(SUM(ao.branches) FILTER (WHERE ao.status = 'active'), 0)
-                                                             AS total_branches_allowed,
+  -- t.max_branches is already addon-inclusive: activate_branch_addon adds
+  -- directly to it. Adding the addon sum again here would double-count
+  -- (this was a real bug — caught via live testing on a tenant with an
+  -- active addon). addon_branches above stays purely informational.
+  t.max_branches::bigint                                     AS total_branches_allowed,
   COALESCE(SUM(sub.amount) FILTER (WHERE sub.status = 'active'), 0)
                                                              AS total_revenue
 FROM tenants t

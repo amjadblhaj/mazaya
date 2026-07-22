@@ -45,6 +45,44 @@ export type TenantBranding = Pick<
   | "welcome_message"
 >;
 
+export interface SuperAdmin {
+  id: string;
+  auth_user_id: string;
+  username: string;
+  created_at: string;
+}
+
+export interface Subscription {
+  id: number;
+  tenant_id: string;
+  plan: TenantPlan;
+  amount: number;
+  currency: string;
+  branches_included: number;
+  students_included: number;
+  status: "pending" | "active" | "cancelled" | "expired";
+  payment_ref: string | null;
+  payment_note: string | null;
+  starts_at: string | null;
+  ends_at: string | null;
+  activated_by: string | null;
+  activated_at: string | null;
+  created_at: string;
+}
+
+export interface BranchAddon {
+  id: number;
+  tenant_id: string;
+  branches: number;
+  amount: number;
+  currency: string;
+  status: "pending" | "active" | "rejected";
+  payment_ref: string | null;
+  activated_by: string | null;
+  activated_at: string | null;
+  created_at: string;
+}
+
 export type StaffRole = "admin" | "staff";
 
 export interface Staff {
