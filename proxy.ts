@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import { createServerClient } from "@supabase/ssr";
 import { getTenantBySubdomain } from "@/lib/tenant/getTenant";
 
 const PLATFORM_DOMAIN = process.env.NEXT_PUBLIC_PLATFORM_DOMAIN || "mazaya.app";
@@ -49,7 +50,29 @@ export async function proxy(request: NextRequest) {
   // so it has to be URI-encoded going in and decoded on the read side.
   requestHeaders.set("x-tenant-data", encodeURIComponent(JSON.stringify(tenant)));
 
-  return NextResponse.next({ request: { headers: requestHeaders } });
+  let response = NextResponse.next({ request: { headers: requestHeaders } });
+
+  // Standard Supabase SSR pattern: refresh the staff session token here so
+  // it's valid before the page renders, and propagate the refreshed cookie
+  // through every response rebuild triggered by setAll.
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll: () => request.cookies.getAll(),
+        setAll: (cookiesToSet) => {
+          cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
+          response = NextResponse.next({ request: { headers: requestHeaders } });
+          cookiesToSet.forEach(({ name, value, options }) => response.cookies.set(name, value, options));
+        },
+      },
+    }
+  );
+
+  await supabase.auth.getUser();
+
+  return response;
 }
 
 export const config = {
