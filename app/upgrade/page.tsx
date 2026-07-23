@@ -1,12 +1,7 @@
 import { redirect } from "next/navigation";
 import { getTenantFromHeaders } from "@/lib/tenant/getTenantFromHeaders";
 import { buildBrandThemeCSS } from "@/lib/tenant/theme";
-
-const PLANS = [
-  { name: "أساسي", price: 300, branches: "5 فروع", students: "500 طالب" },
-  { name: "متوسط", price: 500, branches: "10 فروع", students: "1500 طالب", featured: true },
-  { name: "متقدم", price: 800, branches: "فروع غير محدودة", students: "طلاب غير محدودين" },
-];
+import { PLANS } from "@/lib/pricing";
 
 export default async function UpgradePage() {
   const tenant = await getTenantFromHeaders();
